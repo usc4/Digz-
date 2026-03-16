@@ -6,7 +6,7 @@ local TweenService = game:GetService("TweenService")
 local player       = Players.LocalPlayer
 local playerGui    = player:WaitForChild("PlayerGui")
 
-local IS_MOBILE = UIS.TouchEnabled and not UIS.KeyboardEnabled
+local IS_MOBILE = UIS.TouchEnabled
 
 -- ─── Theme ───────────────────────────────────────────────────────────────────
 local T = {
@@ -354,12 +354,19 @@ function Window.new(title, defaultKey)
 
     local sg=Instance.new("ScreenGui")
     sg.Name="DigzUI"; sg.ResetOnSpawn=false
-    sg.ZIndexBehavior=Enum.ZIndexBehavior.Sibling; sg.DisplayOrder=999; sg.Parent=playerGui
+    sg.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
+    sg.DisplayOrder=999
+    sg.IgnoreGuiInset=true   -- prevents UI being pushed down by topbar on mobile
+    sg.Parent=playerGui
 
-    -- ── Main frame ────────────────────────────────────────────────────────
+    -- responsive size: smaller on mobile touch screens
+    local WIN_W_ACT = IS_MOBILE and 420 or WIN_W
+    local WIN_H_ACT = IS_MOBILE and 340 or WIN_H
+
     local win=Instance.new("Frame")
-    win.Name="Window"; win.Size=UDim2.new(0,WIN_W,0,WIN_H)
-    win.Position=UDim2.new(0.5,-WIN_W/2,0.5,-WIN_H/2)
+    win.Name="Window"
+    win.Size=UDim2.new(0,WIN_W_ACT,0,WIN_H_ACT)
+    win.Position=UDim2.new(0.5,-WIN_W_ACT/2,0.5,-WIN_H_ACT/2)
     win.BackgroundColor3=T.BG; win.BorderSizePixel=0; win.ClipsDescendants=false
     win.Parent=sg; rnd(win,6); brd(win,T.BORDER,1)
 
@@ -441,7 +448,7 @@ function Window.new(title, defaultKey)
     -- ── Open / Close ──────────────────────────────────────────────────────
     self._win=win; self._tabBar=tabBar; self._content=content
     self._tabs={}; self._visible=true
-    self._winSize=UDim2.new(0,WIN_W,0,WIN_H)
+    self._winSize=UDim2.new(0,WIN_W_ACT,0,WIN_H_ACT)
 
     -- guard: ignore any close calls for the first 0.5s after creation
     local spawnTime = tick()
@@ -452,7 +459,7 @@ function Window.new(title, defaultKey)
         if (tick() - spawnTime) < SPAWN_GUARD then return end
         self._visible=false
         win.ClipsDescendants=true
-        tw(win,{Size=UDim2.new(0,WIN_W,0,0)},0.18)
+        tw(win,{Size=UDim2.new(0,WIN_W_ACT,0,0)},0.18)
         task.delay(0.2,function() win.Visible=false; win.Size=self._winSize end)
         if mobileBtn then tw(mobileBtn,{BackgroundColor3=T.ACCENT_DIM},0.1) end
     end
@@ -460,7 +467,7 @@ function Window.new(title, defaultKey)
     local function openWindow()
         if self._visible then return end
         self._visible=true
-        win.Size=UDim2.new(0,WIN_W,0,0); win.Visible=true
+        win.Size=UDim2.new(0,WIN_W_ACT,0,0); win.Visible=true
         win.ClipsDescendants=true
         tw(win,{Size=self._winSize},0.18)
         task.delay(0.2,function() win.ClipsDescendants=false end)
