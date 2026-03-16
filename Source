@@ -1,6 +1,4 @@
---[[
-digz
-]]
+
 
 local Players      = game:GetService("Players")
 local UIS          = game:GetService("UserInputService")
@@ -8,93 +6,76 @@ local TweenService = game:GetService("TweenService")
 local player       = Players.LocalPlayer
 local playerGui    = player:WaitForChild("PlayerGui")
 
--- detect mobile once
 local IS_MOBILE = UIS.TouchEnabled and not UIS.KeyboardEnabled
 
+-- ─── Theme ───────────────────────────────────────────────────────────────────
 local T = {
-    BG          = Color3.fromRGB(13,  13,  18),
-    SURFACE     = Color3.fromRGB(20,  20,  28),
-    SURFACE2    = Color3.fromRGB(28,  28,  40),
-    SURFACE3    = Color3.fromRGB(36,  36,  52),
-    BORDER      = Color3.fromRGB(48,  48,  65),
-    ACCENT      = Color3.fromRGB(80,  155, 255),
-    ACCENT_DIM  = Color3.fromRGB(45,  95,  175),
-    GREEN       = Color3.fromRGB(0,   200, 110),
-    RED         = Color3.fromRGB(220, 65,  65),
-    TEXT        = Color3.fromRGB(215, 215, 225),
-    TEXT_DIM    = Color3.fromRGB(115, 115, 135),
-    TEXT_BRIGHT = Color3.fromRGB(245, 245, 255),
-    TOGGLE_OFF  = Color3.fromRGB(48,  48,  66),
-    TOGGLE_ON   = Color3.fromRGB(0,   195, 108),
-    SLIDER_BG   = Color3.fromRGB(32,  32,  48),
-    SLIDER_FILL = Color3.fromRGB(80,  155, 255),
-    TAB_BG      = Color3.fromRGB(10,  10,  15),
-    TAB_ACTIVE  = Color3.fromRGB(80,  155, 255),
-    TAB_INACTIVE= Color3.fromRGB(110, 110, 130),
+    BG           = Color3.fromRGB(13,  13,  18),
+    SURFACE      = Color3.fromRGB(20,  20,  28),
+    SURFACE2     = Color3.fromRGB(28,  28,  40),
+    SURFACE3     = Color3.fromRGB(36,  36,  52),
+    BORDER       = Color3.fromRGB(48,  48,  65),
+    ACCENT       = Color3.fromRGB(80,  155, 255),
+    ACCENT_DIM   = Color3.fromRGB(45,  95,  175),
+    GREEN        = Color3.fromRGB(0,   200, 110),
+    RED          = Color3.fromRGB(220, 65,  65),
+    TEXT         = Color3.fromRGB(215, 215, 225),
+    TEXT_DIM     = Color3.fromRGB(115, 115, 135),
+    TEXT_BRIGHT  = Color3.fromRGB(245, 245, 255),
+    TOGGLE_OFF   = Color3.fromRGB(48,  48,  66),
+    TOGGLE_ON    = Color3.fromRGB(0,   195, 108),
+    SLIDER_BG    = Color3.fromRGB(32,  32,  48),
+    SLIDER_FILL  = Color3.fromRGB(80,  155, 255),
+    TAB_BG       = Color3.fromRGB(10,  10,  15),
+    TAB_ACTIVE   = Color3.fromRGB(80,  155, 255),
+    TAB_INACTIVE = Color3.fromRGB(110, 110, 130),
+    KEY_BG       = Color3.fromRGB(30,  30,  45),
 }
 
 local FONT      = Enum.Font.Code
 local FONT_SEMI = Enum.Font.GothamSemibold
 local FONT_BOLD = Enum.Font.GothamBold
 local ROW_H     = 30
+local WIN_W     = 550
+local WIN_H     = 415
+local HEADER_H  = 32   -- title bar
+local TABBAR_H  = 28   -- tabs
+local SEP_H     = 1
 
--- ─── Helpers ─────────────────────────────────────────────────────────────────
-local function rnd(inst, r)
-    local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, r or 5); c.Parent = inst
-end
-
-local function brd(inst, col, thick)
-    local s = Instance.new("UIStroke"); s.Color = col or T.BORDER; s.Thickness = thick or 1
-    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border; s.Parent = inst
-end
-
-local function tw(obj, props, t)
-    TweenService:Create(obj, TweenInfo.new(t or 0.13, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
-end
+-- ─── Utility ─────────────────────────────────────────────────────────────────
+local function rnd(i, r) local c=Instance.new("UICorner"); c.CornerRadius=UDim.new(0,r or 5); c.Parent=i end
+local function brd(i, col, t) local s=Instance.new("UIStroke"); s.Color=col or T.BORDER; s.Thickness=t or 1; s.ApplyStrokeMode=Enum.ApplyStrokeMode.Border; s.Parent=i end
+local function tw(o, p, t) TweenService:Create(o,TweenInfo.new(t or 0.13,Enum.EasingStyle.Quad,Enum.EasingDirection.Out),p):Play() end
 
 local function lbl(parent, text, size, color, font, xAlign)
     local l = Instance.new("TextLabel")
-    l.Size = UDim2.new(1,0,1,0); l.BackgroundTransparency = 1
-    l.Text = text or ""; l.TextColor3 = color or T.TEXT
-    l.Font = font or FONT; l.TextSize = size or 13
-    l.TextXAlignment = xAlign or Enum.TextXAlignment.Left
-    l.TextTruncate = Enum.TextTruncate.AtEnd; l.Parent = parent
+    l.Size=UDim2.new(1,0,1,0); l.BackgroundTransparency=1
+    l.Text=text or ""; l.TextColor3=color or T.TEXT
+    l.Font=font or FONT; l.TextSize=size or 13
+    l.TextXAlignment=xAlign or Enum.TextXAlignment.Left
+    l.TextTruncate=Enum.TextTruncate.AtEnd; l.Parent=parent
     return l
 end
 
--- Unified click: fires callback on MouseButton1Click OR Touch
-local function onClick(btn, callback)
-    btn.MouseButton1Click:Connect(callback)
-    btn.TouchTap:Connect(function() callback() end)
+local function onClick(btn, cb)
+    btn.MouseButton1Click:Connect(cb)
+    btn.TouchTap:Connect(function() cb() end)
 end
 
--- Draggable — supports both mouse and touch
 local function makeDraggable(handle, target)
     local down, origin, ws = false
-    local function startDrag(pos)
-        down = true; origin = pos; ws = target.Position
-    end
-    local function stopDrag()
-        down = false
-    end
-    local function moveDrag(pos)
-        if not down then return end
-        local d = pos - origin
-        target.Position = UDim2.new(ws.X.Scale, ws.X.Offset+d.X, ws.Y.Scale, ws.Y.Offset+d.Y)
-    end
     handle.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-            startDrag(i.Position)
+        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+            down=true; origin=i.Position; ws=target.Position
         end
     end)
     handle.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-            stopDrag()
-        end
+        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then down=false end
     end)
     UIS.InputChanged:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then
-            moveDrag(i.Position)
+        if down and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then
+            local d=i.Position-origin
+            target.Position=UDim2.new(ws.X.Scale,ws.X.Offset+d.X,ws.Y.Scale,ws.Y.Offset+d.Y)
         end
     end)
 end
@@ -105,338 +86,224 @@ end
 local Section = {}
 Section.__index = Section
 
-function Section.new(columnParent, title)
+function Section.new(parent, title)
     local self = setmetatable({}, Section)
 
     local card = Instance.new("Frame")
-    card.Size = UDim2.new(1,0,0,0)
-    card.AutomaticSize = Enum.AutomaticSize.Y
-    card.BackgroundColor3 = T.SURFACE
-    card.BorderSizePixel = 0
-    card.Parent = columnParent
-    rnd(card, 5); brd(card, T.BORDER, 1)
+    card.Size=UDim2.new(1,0,0,0); card.AutomaticSize=Enum.AutomaticSize.Y
+    card.BackgroundColor3=T.SURFACE; card.BorderSizePixel=0; card.Parent=parent
+    rnd(card,5); brd(card,T.BORDER,1)
 
-    local header = Instance.new("Frame")
-    header.Size = UDim2.new(1,0,0,26)
-    header.BackgroundColor3 = T.SURFACE2
-    header.BorderSizePixel = 0
-    header.Parent = card
-    rnd(header, 5)
+    local hdr = Instance.new("Frame")
+    hdr.Size=UDim2.new(1,0,0,26); hdr.BackgroundColor3=T.SURFACE2
+    hdr.BorderSizePixel=0; hdr.Parent=card; rnd(hdr,5)
 
-    local hl = Instance.new("TextLabel")
-    hl.Size = UDim2.new(1,-10,1,0); hl.Position = UDim2.new(0,10,0,0)
-    hl.BackgroundTransparency = 1; hl.Text = title
-    hl.TextColor3 = T.ACCENT; hl.Font = FONT_SEMI; hl.TextSize = 12
-    hl.TextXAlignment = Enum.TextXAlignment.Left; hl.Parent = header
+    local hl = lbl(hdr, title, 12, T.ACCENT, FONT_SEMI)
+    hl.Size=UDim2.new(1,-10,1,0); hl.Position=UDim2.new(0,10,0,0)
 
     local content = Instance.new("Frame")
-    content.Size = UDim2.new(1,0,0,0)
-    content.Position = UDim2.new(0,0,0,26)
-    content.AutomaticSize = Enum.AutomaticSize.Y
-    content.BackgroundTransparency = 1
-    content.BorderSizePixel = 0
-    content.Parent = card
+    content.Size=UDim2.new(1,0,0,0); content.Position=UDim2.new(0,0,0,26)
+    content.AutomaticSize=Enum.AutomaticSize.Y
+    content.BackgroundTransparency=1; content.BorderSizePixel=0; content.Parent=card
 
     local ll = Instance.new("UIListLayout")
-    ll.FillDirection = Enum.FillDirection.Vertical
-    ll.SortOrder = Enum.SortOrder.LayoutOrder
-    ll.Padding = UDim.new(0,0)
-    ll.Parent = content
+    ll.FillDirection=Enum.FillDirection.Vertical; ll.SortOrder=Enum.SortOrder.LayoutOrder
+    ll.Padding=UDim.new(0,0); ll.Parent=content
 
     local pad = Instance.new("UIPadding")
-    pad.PaddingLeft = UDim.new(0,8); pad.PaddingRight = UDim.new(0,8)
-    pad.PaddingTop = UDim.new(0,4); pad.PaddingBottom = UDim.new(0,6)
-    pad.Parent = content
+    pad.PaddingLeft=UDim.new(0,8); pad.PaddingRight=UDim.new(0,8)
+    pad.PaddingTop=UDim.new(0,4); pad.PaddingBottom=UDim.new(0,6)
+    pad.Parent=content
 
-    self._content  = content
-    self._rowOrder = 0
+    self._content=content; self._rowOrder=0
     return self
 end
 
 function Section:_row(h)
-    local r = Instance.new("Frame")
-    r.Size = UDim2.new(1,0,0,h or ROW_H)
-    r.BackgroundTransparency = 1; r.BorderSizePixel = 0
-    r.LayoutOrder = self._rowOrder; r.Parent = self._content
-    self._rowOrder = self._rowOrder + 1
+    local r=Instance.new("Frame")
+    r.Size=UDim2.new(1,0,0,h or ROW_H); r.BackgroundTransparency=1
+    r.BorderSizePixel=0; r.LayoutOrder=self._rowOrder; r.Parent=self._content
+    self._rowOrder=self._rowOrder+1
     return r
 end
 
 -- ── createtoggle ─────────────────────────────────────────────────────────────
 function Section:createtoggle(text, default, callback)
-    local row   = self:_row(ROW_H)
-    local state = (default == true)
+    local row=self:_row(ROW_H); local state=(default==true)
+    local nl=lbl(row,text,13,T.TEXT,FONT); nl.Size=UDim2.new(1,-48,1,0); nl.Position=UDim2.new(0,2,0,0)
 
-    local nameLbl = lbl(row, text, 13, T.TEXT, FONT)
-    nameLbl.Size = UDim2.new(1,-48,1,0); nameLbl.Position = UDim2.new(0,2,0,0)
+    local pill=Instance.new("Frame")
+    pill.Size=UDim2.new(0,36,0,19); pill.Position=UDim2.new(1,-37,0.5,-9.5)
+    pill.BackgroundColor3=state and T.TOGGLE_ON or T.TOGGLE_OFF; pill.BorderSizePixel=0; pill.Parent=row; rnd(pill,10)
 
-    local pill = Instance.new("Frame")
-    pill.Size = UDim2.new(0,36,0,19); pill.Position = UDim2.new(1,-37,0.5,-9.5)
-    pill.BackgroundColor3 = state and T.TOGGLE_ON or T.TOGGLE_OFF
-    pill.BorderSizePixel = 0; pill.Parent = row; rnd(pill, 10)
+    local knob=Instance.new("Frame")
+    knob.Size=UDim2.new(0,13,0,13)
+    knob.Position=state and UDim2.new(1,-16,0.5,-6.5) or UDim2.new(0,3,0.5,-6.5)
+    knob.BackgroundColor3=Color3.new(1,1,1); knob.BorderSizePixel=0; knob.ZIndex=3; knob.Parent=pill; rnd(knob,7)
 
-    local knob = Instance.new("Frame")
-    knob.Size = UDim2.new(0,13,0,13)
-    knob.Position = state and UDim2.new(1,-16,0.5,-6.5) or UDim2.new(0,3,0.5,-6.5)
-    knob.BackgroundColor3 = Color3.new(1,1,1); knob.BorderSizePixel = 0
-    knob.ZIndex = 3; knob.Parent = pill; rnd(knob, 7)
-
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1,0,1,0); btn.BackgroundTransparency = 1
-    btn.Text = ""; btn.ZIndex = 4; btn.Parent = row
+    local btn=Instance.new("TextButton")
+    btn.Size=UDim2.new(1,0,1,0); btn.BackgroundTransparency=1; btn.Text=""; btn.ZIndex=4; btn.Parent=row
 
     local function refresh()
-        tw(pill, {BackgroundColor3 = state and T.TOGGLE_ON or T.TOGGLE_OFF})
-        tw(knob, {Position = state and UDim2.new(1,-16,0.5,-6.5) or UDim2.new(0,3,0.5,-6.5)})
+        tw(pill,{BackgroundColor3=state and T.TOGGLE_ON or T.TOGGLE_OFF})
+        tw(knob,{Position=state and UDim2.new(1,-16,0.5,-6.5) or UDim2.new(0,3,0.5,-6.5)})
     end
-
-    local function toggle()
-        state = not state; refresh()
-        if callback then callback(state) end
-    end
-
-    onClick(btn, toggle)
-    btn.MouseEnter:Connect(function() tw(nameLbl, {TextColor3=T.TEXT_BRIGHT}, 0.08) end)
-    btn.MouseLeave:Connect(function() tw(nameLbl, {TextColor3=T.TEXT}, 0.08) end)
+    onClick(btn,function() state=not state; refresh(); if callback then callback(state) end end)
+    btn.MouseEnter:Connect(function() tw(nl,{TextColor3=T.TEXT_BRIGHT},0.08) end)
+    btn.MouseLeave:Connect(function() tw(nl,{TextColor3=T.TEXT},0.08) end)
 
     return {
-        getValue = function() return state end,
-        setValue = function(v) state=v; refresh(); if callback then callback(state) end end,
+        getValue=function() return state end,
+        setValue=function(v) state=v; refresh(); if callback then callback(state) end end,
     }
 end
 
 -- ── createslider ─────────────────────────────────────────────────────────────
 function Section:createslider(text, min, max, default, callback)
-    local labelRow = self:_row(20)
-    local trackRow = self:_row(20)  -- fixed: was 22, now 20 to match label row height
-    local value = math.clamp(default or min, min, max)
-    local range = math.max(max - min, 1)
+    local lr=self:_row(20); local tr=self:_row(20)
+    local value=math.clamp(default or min,min,max)
+    local range=math.max(max-min,1)
 
-    -- Label row
-    local nameLbl = lbl(labelRow, text, 12, T.TEXT_DIM, FONT)
-    nameLbl.Size = UDim2.new(0.62,0,1,0)
+    local nl=lbl(lr,text,12,T.TEXT_DIM,FONT); nl.Size=UDim2.new(0.62,0,1,0)
+    local vl=lbl(lr,value.."/"..max,12,T.ACCENT,FONT,Enum.TextXAlignment.Right)
+    vl.Size=UDim2.new(0.38,0,1,0); vl.Position=UDim2.new(0.62,0,0,0)
 
-    local valLbl = lbl(labelRow, value.."/"..max, 12, T.ACCENT, FONT, Enum.TextXAlignment.Right)
-    valLbl.Size = UDim2.new(0.38,0,1,0); valLbl.Position = UDim2.new(0.62,0,0,0)
+    local track=Instance.new("Frame")
+    track.Size=UDim2.new(1,0,0,6); track.Position=UDim2.new(0,0,0.5,-3)
+    track.BackgroundColor3=T.SLIDER_BG; track.BorderSizePixel=0; track.Parent=tr; rnd(track,3)
 
-    -- Track (slim, centered in row)
-    local track = Instance.new("Frame")
-    track.Size = UDim2.new(1,0,0,6)      -- slim 6px track
-    track.Position = UDim2.new(0,0,0.5,-3)
-    track.BackgroundColor3 = T.SLIDER_BG
-    track.BorderSizePixel = 0
-    track.Parent = trackRow
-    rnd(track, 3)
+    local pct0=math.clamp((value-min)/range,0,1)
+    local fill=Instance.new("Frame")
+    fill.Size=UDim2.new(pct0,0,1,0); fill.BackgroundColor3=T.SLIDER_FILL
+    fill.BorderSizePixel=0; fill.Parent=track; rnd(fill,3)
 
-    local pct0 = math.clamp((value-min)/range, 0, 1)
+    local knob=Instance.new("Frame")
+    knob.Size=UDim2.new(0,10,0,10); knob.Position=UDim2.new(pct0,-5,0.5,-5)
+    knob.BackgroundColor3=Color3.new(1,1,1); knob.BorderSizePixel=0; knob.ZIndex=5; knob.Parent=track; rnd(knob,5)
+    brd(knob,T.ACCENT,1.5)
 
-    local fill = Instance.new("Frame")
-    fill.Size = UDim2.new(pct0,0,1,0)
-    fill.BackgroundColor3 = T.SLIDER_FILL
-    fill.BorderSizePixel = 0
-    fill.Parent = track
-    rnd(fill, 3)
+    local hb=Instance.new("TextButton")
+    hb.Size=UDim2.new(1,0,0,18); hb.Position=UDim2.new(0,0,0.5,-9)
+    hb.BackgroundTransparency=1; hb.Text=""; hb.ZIndex=6; hb.Parent=track
 
-    -- Knob: small 10px circle, correct size
-    local knob = Instance.new("Frame")
-    knob.Size = UDim2.new(0,10,0,10)
-    knob.Position = UDim2.new(pct0,-5,0.5,-5)
-    knob.BackgroundColor3 = Color3.new(1,1,1)
-    knob.BorderSizePixel = 0
-    knob.ZIndex = 5
-    knob.Parent = track
-    rnd(knob, 5)
-    brd(knob, T.ACCENT, 1.5)
-
-    -- Hitbox: just a thin strip over the track, not oversized
-    local hitbox = Instance.new("TextButton")
-    hitbox.Size = UDim2.new(1,0,0,18)
-    hitbox.Position = UDim2.new(0,0,0.5,-9)
-    hitbox.BackgroundTransparency = 1
-    hitbox.Text = ""; hitbox.ZIndex = 6
-    hitbox.Parent = track
-
-    local sliding = false
-
-    local function applyX(absX)
-        local p = math.clamp((absX - track.AbsolutePosition.X) / math.max(track.AbsoluteSize.X,1), 0, 1)
-        value = math.round(min + range * p)
-        fill.Size = UDim2.new(p,0,1,0)
-        knob.Position = UDim2.new(p,-5,0.5,-5)
-        valLbl.Text = value.."/"..max
+    local sliding=false
+    local function applyX(ax)
+        local p=math.clamp((ax-track.AbsolutePosition.X)/math.max(track.AbsoluteSize.X,1),0,1)
+        value=math.round(min+range*p)
+        fill.Size=UDim2.new(p,0,1,0); knob.Position=UDim2.new(p,-5,0.5,-5); vl.Text=value.."/"..max
         if callback then callback(value) end
     end
 
-    -- Mouse support
-    hitbox.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then
-            sliding = true; applyX(i.Position.X)
+    hb.InputBegan:Connect(function(i)
+        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+            sliding=true; applyX(i.Position.X)
         end
     end)
     UIS.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then sliding = false end
+        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then sliding=false end
     end)
     UIS.InputChanged:Connect(function(i)
-        if sliding and i.UserInputType == Enum.UserInputType.MouseMovement then applyX(i.Position.X) end
-    end)
-
-    -- Touch support
-    hitbox.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.Touch then
-            sliding = true; applyX(i.Position.X)
-        end
-    end)
-    UIS.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.Touch then sliding = false end
-    end)
-    UIS.InputChanged:Connect(function(i)
-        if sliding and i.UserInputType == Enum.UserInputType.Touch then applyX(i.Position.X) end
+        if sliding and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then applyX(i.Position.X) end
     end)
 
     return {
-        getValue = function() return value end,
-        setValue = function(v)
-            value = math.clamp(v,min,max)
-            local p = (value-min)/range
-            fill.Size = UDim2.new(p,0,1,0)
-            knob.Position = UDim2.new(p,-5,0.5,-5)
-            valLbl.Text = value.."/"..max
+        getValue=function() return value end,
+        setValue=function(v)
+            value=math.clamp(v,min,max); local p=(value-min)/range
+            fill.Size=UDim2.new(p,0,1,0); knob.Position=UDim2.new(p,-5,0.5,-5); vl.Text=value.."/"..max
         end,
     }
 end
 
 -- ── createbutton ─────────────────────────────────────────────────────────────
 function Section:createbutton(text, callback)
-    local row = self:_row(ROW_H-2)
-
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1,0,1,-6); btn.Position = UDim2.new(0,0,0,3)
-    btn.BackgroundColor3 = T.SURFACE2; btn.BorderSizePixel = 0
-    btn.Text = text; btn.TextColor3 = T.TEXT
-    btn.Font = FONT_SEMI; btn.TextSize = 12
-    btn.Parent = row; rnd(btn,4); brd(btn, T.BORDER, 1)
-
-    btn.MouseEnter:Connect(function() tw(btn,{BackgroundColor3=T.ACCENT, TextColor3=Color3.new(1,1,1)}) end)
-    btn.MouseLeave:Connect(function() tw(btn,{BackgroundColor3=T.SURFACE2, TextColor3=T.TEXT}) end)
+    local row=self:_row(ROW_H-2)
+    local btn=Instance.new("TextButton")
+    btn.Size=UDim2.new(1,0,1,-6); btn.Position=UDim2.new(0,0,0,3)
+    btn.BackgroundColor3=T.SURFACE2; btn.BorderSizePixel=0
+    btn.Text=text; btn.TextColor3=T.TEXT; btn.Font=FONT_SEMI; btn.TextSize=12
+    btn.Parent=row; rnd(btn,4); brd(btn,T.BORDER,1)
+    btn.MouseEnter:Connect(function() tw(btn,{BackgroundColor3=T.ACCENT,TextColor3=Color3.new(1,1,1)}) end)
+    btn.MouseLeave:Connect(function() tw(btn,{BackgroundColor3=T.SURFACE2,TextColor3=T.TEXT}) end)
     btn.MouseButton1Down:Connect(function() tw(btn,{BackgroundColor3=T.ACCENT_DIM},0.05) end)
-    onClick(btn, function()
-        tw(btn,{BackgroundColor3=T.ACCENT},0.05)
-        if callback then callback() end
-    end)
+    onClick(btn,function() tw(btn,{BackgroundColor3=T.ACCENT},0.05); if callback then callback() end end)
 end
 
 -- ── createdropdown ───────────────────────────────────────────────────────────
 function Section:createdropdown(text, options, default, callback)
-    local row      = self:_row(ROW_H)
-    local selected = default or options[1]
-    local listFrame
-    local open = false
+    local row=self:_row(ROW_H); local selected=default or options[1]; local listFrame; local open=false
+    local nl=lbl(row,text,13,T.TEXT,FONT); nl.Size=UDim2.new(0.42,0,1,0)
 
-    local nameLbl = lbl(row, text, 13, T.TEXT, FONT)
-    nameLbl.Size = UDim2.new(0.42,0,1,0)
+    local db=Instance.new("TextButton")
+    db.Size=UDim2.new(0.56,0,0.75,0); db.Position=UDim2.new(0.44,0,0.125,0)
+    db.BackgroundColor3=T.SURFACE2; db.BorderSizePixel=0
+    db.Text=selected.." ▾"; db.TextColor3=T.ACCENT; db.Font=FONT; db.TextSize=11
+    db.TextTruncate=Enum.TextTruncate.AtEnd; db.Parent=row; rnd(db,4); brd(db,T.BORDER,1)
 
-    local dropBtn = Instance.new("TextButton")
-    dropBtn.Size = UDim2.new(0.56,0,0.75,0); dropBtn.Position = UDim2.new(0.44,0,0.125,0)
-    dropBtn.BackgroundColor3 = T.SURFACE2; dropBtn.BorderSizePixel = 0
-    dropBtn.Text = selected.." ▾"; dropBtn.TextColor3 = T.ACCENT
-    dropBtn.Font = FONT; dropBtn.TextSize = 11
-    dropBtn.TextTruncate = Enum.TextTruncate.AtEnd
-    dropBtn.Parent = row; rnd(dropBtn,4); brd(dropBtn, T.BORDER, 1)
-
-    local function closeList()
-        open = false
-        if listFrame then listFrame:Destroy(); listFrame = nil end
-    end
-
+    local function closeList() open=false; if listFrame then listFrame:Destroy(); listFrame=nil end end
     local function openList()
-        open = true
-        listFrame = Instance.new("Frame")
-        listFrame.Size = UDim2.new(0, dropBtn.AbsoluteSize.X, 0, #options*24+4)
-        listFrame.BackgroundColor3 = T.SURFACE3; listFrame.BorderSizePixel = 0; listFrame.ZIndex = 20
-        local rowAbsY = row.AbsolutePosition.Y
-        local cAbsY   = self._content.AbsolutePosition.Y
-        local dAbsX   = dropBtn.AbsolutePosition.X
-        local cAbsX   = self._content.AbsolutePosition.X
-        listFrame.Position = UDim2.new(0, dAbsX-cAbsX, 0, rowAbsY-cAbsY+ROW_H)
-        listFrame.Parent = self._content; rnd(listFrame,4); brd(listFrame, T.ACCENT, 1)
-
-        local ll = Instance.new("UIListLayout")
-        ll.FillDirection = Enum.FillDirection.Vertical
-        ll.SortOrder = Enum.SortOrder.LayoutOrder
-        ll.Parent = listFrame
-
-        for i, opt in ipairs(options) do
-            local ob = Instance.new("TextButton")
-            ob.Size = UDim2.new(1,0,0,24); ob.BackgroundColor3 = T.SURFACE3
-            ob.BorderSizePixel = 0; ob.Text = opt
-            ob.TextColor3 = opt == selected and T.ACCENT or T.TEXT
-            ob.Font = FONT; ob.TextSize = 11; ob.ZIndex = 21; ob.LayoutOrder = i
-            ob.Parent = listFrame
+        open=true; listFrame=Instance.new("Frame")
+        listFrame.Size=UDim2.new(0,db.AbsoluteSize.X,0,#options*24+4)
+        listFrame.BackgroundColor3=T.SURFACE3; listFrame.BorderSizePixel=0; listFrame.ZIndex=20
+        local ry=row.AbsolutePosition.Y; local cy=self._content.AbsolutePosition.Y
+        local dx=db.AbsolutePosition.X;  local cx=self._content.AbsolutePosition.X
+        listFrame.Position=UDim2.new(0,dx-cx,0,ry-cy+ROW_H)
+        listFrame.Parent=self._content; rnd(listFrame,4); brd(listFrame,T.ACCENT,1)
+        local ll=Instance.new("UIListLayout"); ll.FillDirection=Enum.FillDirection.Vertical; ll.SortOrder=Enum.SortOrder.LayoutOrder; ll.Parent=listFrame
+        for i,opt in ipairs(options) do
+            local ob=Instance.new("TextButton")
+            ob.Size=UDim2.new(1,0,0,24); ob.BackgroundColor3=T.SURFACE3; ob.BorderSizePixel=0
+            ob.Text=opt; ob.TextColor3=opt==selected and T.ACCENT or T.TEXT
+            ob.Font=FONT; ob.TextSize=11; ob.ZIndex=21; ob.LayoutOrder=i; ob.Parent=listFrame
             ob.MouseEnter:Connect(function() tw(ob,{BackgroundColor3=T.SURFACE2},0.07) end)
             ob.MouseLeave:Connect(function() tw(ob,{BackgroundColor3=T.SURFACE3},0.07) end)
-            onClick(ob, function()
-                selected = opt; dropBtn.Text = opt.." ▾"; closeList()
-                if callback then callback(opt) end
-            end)
+            onClick(ob,function() selected=opt; db.Text=opt.." ▾"; closeList(); if callback then callback(opt) end end)
         end
     end
-
-    onClick(dropBtn, function() if open then closeList() else openList() end end)
-
+    onClick(db,function() if open then closeList() else openList() end end)
     return {
-        getValue = function() return selected end,
-        setValue = function(v) selected=v; dropBtn.Text=v.." ▾"; if callback then callback(v) end end,
+        getValue=function() return selected end,
+        setValue=function(v) selected=v; db.Text=v.." ▾"; if callback then callback(v) end end,
     }
 end
 
 -- ── createkeybind ────────────────────────────────────────────────────────────
 function Section:createkeybind(text, default, callback)
-    local row = self:_row(ROW_H)
-    local binding = default
-    local listening = false
+    local row=self:_row(ROW_H); local binding=default; local listening=false
+    local nl=lbl(row,text,13,T.TEXT,FONT); nl.Size=UDim2.new(0.5,0,1,0)
 
-    local nameLbl = lbl(row, text, 13, T.TEXT, FONT)
-    nameLbl.Size = UDim2.new(0.5,0,1,0)
+    local keyBtn=Instance.new("TextButton")
+    keyBtn.Size=UDim2.new(0.48,0,0.72,0); keyBtn.Position=UDim2.new(0.52,0,0.14,0)
+    keyBtn.BackgroundColor3=T.SURFACE2; keyBtn.BorderSizePixel=0
+    keyBtn.Text=binding and tostring(binding):gsub("Enum.KeyCode.","") or "None"
+    keyBtn.TextColor3=T.ACCENT; keyBtn.Font=FONT; keyBtn.TextSize=11
+    keyBtn.Parent=row; rnd(keyBtn,4); brd(keyBtn,T.BORDER,1)
 
-    local keyBtn = Instance.new("TextButton")
-    keyBtn.Size = UDim2.new(0.48,0,0.72,0); keyBtn.Position = UDim2.new(0.52,0,0.14,0)
-    keyBtn.BackgroundColor3 = T.SURFACE2; keyBtn.BorderSizePixel = 0
-    keyBtn.Text = binding and tostring(binding):gsub("Enum.KeyCode.","") or "None"
-    keyBtn.TextColor3 = T.ACCENT; keyBtn.Font = FONT; keyBtn.TextSize = 11
-    keyBtn.Parent = row; rnd(keyBtn,4); brd(keyBtn, T.BORDER, 1)
-
-    onClick(keyBtn, function()
+    onClick(keyBtn,function()
         if listening then return end
-        listening = true
-        keyBtn.Text = "[ press key ]"; keyBtn.TextColor3 = T.RED
+        listening=true; keyBtn.Text="[ press key ]"; keyBtn.TextColor3=T.RED
     end)
-
-    -- Keyboard
     UIS.InputBegan:Connect(function(i,gp)
-        if listening and not gp and i.UserInputType == Enum.UserInputType.Keyboard then
-            binding = i.KeyCode; listening = false
-            keyBtn.Text = tostring(i.KeyCode):gsub("Enum.KeyCode.","")
-            keyBtn.TextColor3 = T.ACCENT
+        if listening and not gp and i.UserInputType==Enum.UserInputType.Keyboard then
+            binding=i.KeyCode; listening=false
+            keyBtn.Text=tostring(i.KeyCode):gsub("Enum.KeyCode.",""); keyBtn.TextColor3=T.ACCENT
             if callback then callback(binding) end
         end
     end)
-
-    return { getValue = function() return binding end }
+    return {getValue=function() return binding end}
 end
 
 -- ── createlabel ──────────────────────────────────────────────────────────────
 function Section:createlabel(text)
-    local row = self:_row(22)
-    local l = lbl(row, text, 11, T.TEXT_DIM, FONT)
-    l.TextWrapped = true
+    local row=self:_row(22); local l=lbl(row,text,11,T.TEXT_DIM,FONT); l.TextWrapped=true
 end
 
 -- ── createdivider ────────────────────────────────────────────────────────────
 function Section:createdivider()
-    local row = self:_row(10)
-    local line = Instance.new("Frame")
-    line.Size = UDim2.new(1,0,0,1); line.Position = UDim2.new(0,0,0.5,0)
-    line.BackgroundColor3 = T.BORDER; line.BorderSizePixel = 0; line.Parent = row
+    local row=self:_row(10)
+    local line=Instance.new("Frame")
+    line.Size=UDim2.new(1,0,0,1); line.Position=UDim2.new(0,0,0.5,0)
+    line.BackgroundColor3=T.BORDER; line.BorderSizePixel=0; line.Parent=row
 end
 
 -- ═══════════════════════════════════════════════════════════════════════════
@@ -445,45 +312,34 @@ end
 local Tab = {}
 Tab.__index = Tab
 
-function Tab.new(contentParent)
-    local self = setmetatable({}, Tab)
+function Tab.new(parent)
+    local self=setmetatable({},Tab)
+    local frame=Instance.new("Frame")
+    frame.Size=UDim2.new(1,0,1,0); frame.BackgroundTransparency=1
+    frame.Visible=false; frame.Parent=parent
 
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(1,0,1,0); frame.BackgroundTransparency = 1
-    frame.Visible = false; frame.Parent = contentParent
-
-    local function makeCol(xScale, xOffset)
-        local scroll = Instance.new("ScrollingFrame")
-        scroll.Size = UDim2.new(0.5,-5,1,0)
-        scroll.Position = UDim2.new(xScale, xOffset, 0, 0)
-        scroll.BackgroundTransparency = 1; scroll.BorderSizePixel = 0
-        scroll.ScrollBarThickness = 2; scroll.ScrollBarImageColor3 = T.BORDER
-        scroll.CanvasSize = UDim2.new(0,0,0,0)
-        scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-        scroll.Parent = frame
-        local ll = Instance.new("UIListLayout")
-        ll.FillDirection = Enum.FillDirection.Vertical
-        ll.SortOrder = Enum.SortOrder.LayoutOrder
-        ll.Padding = UDim.new(0,5); ll.Parent = scroll
-        local p = Instance.new("UIPadding")
-        p.PaddingLeft = UDim.new(0,4); p.PaddingRight = UDim.new(0,4)
-        p.PaddingTop = UDim.new(0,5); p.PaddingBottom = UDim.new(0,5)
-        p.Parent = scroll
-        return scroll
+    local function makeCol(xs,xo)
+        local s=Instance.new("ScrollingFrame")
+        s.Size=UDim2.new(0.5,-5,1,0); s.Position=UDim2.new(xs,xo,0,0)
+        s.BackgroundTransparency=1; s.BorderSizePixel=0
+        s.ScrollBarThickness=2; s.ScrollBarImageColor3=T.BORDER
+        s.CanvasSize=UDim2.new(0,0,0,0); s.AutomaticCanvasSize=Enum.AutomaticSize.Y
+        s.Parent=frame
+        local ll=Instance.new("UIListLayout"); ll.FillDirection=Enum.FillDirection.Vertical
+        ll.SortOrder=Enum.SortOrder.LayoutOrder; ll.Padding=UDim.new(0,5); ll.Parent=s
+        local p=Instance.new("UIPadding")
+        p.PaddingLeft=UDim.new(0,4); p.PaddingRight=UDim.new(0,4)
+        p.PaddingTop=UDim.new(0,5); p.PaddingBottom=UDim.new(0,5); p.Parent=s
+        return s
     end
 
-    self._frame    = frame
-    self._cols     = { makeCol(0,4), makeCol(0.5,1) }
-    self._colIdx   = 0
-    self._sections = {}
+    self._frame=frame; self._cols={makeCol(0,4),makeCol(0.5,1)}; self._colIdx=0; self._sections={}
     return self
 end
 
 function Tab:createsection(title)
-    local col = self._cols[(self._colIdx % 2) + 1]
-    self._colIdx = self._colIdx + 1
-    local sec = Section.new(col, title)
-    table.insert(self._sections, sec)
+    local col=self._cols[(self._colIdx%2)+1]; self._colIdx=self._colIdx+1
+    local sec=Section.new(col,title); table.insert(self._sections,sec)
     return sec
 end
 
@@ -493,181 +349,188 @@ end
 local Window = {}
 Window.__index = Window
 
-function Window.new(title, toggleKey)
-    local self = setmetatable({}, Window)
+function Window.new(title, defaultKey)
+    local self=setmetatable({},Window)
 
-    local sg = Instance.new("ScreenGui")
-    sg.Name = "DigzUI"; sg.ResetOnSpawn = false
-    sg.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    sg.DisplayOrder = 999; sg.Parent = playerGui
+    local sg=Instance.new("ScreenGui")
+    sg.Name="DigzUI"; sg.ResetOnSpawn=false
+    sg.ZIndexBehavior=Enum.ZIndexBehavior.Sibling; sg.DisplayOrder=999; sg.Parent=playerGui
 
-    local WIN_W, WIN_H = 550, 415
-    local win = Instance.new("Frame")
-    win.Name = "Window"
-    win.Size = UDim2.new(0,WIN_W,0,WIN_H)
-    win.Position = UDim2.new(0.5,-WIN_W/2,0.5,-WIN_H/2)
-    win.BackgroundColor3 = T.BG; win.BorderSizePixel = 0; win.Parent = sg
-    rnd(win,6); brd(win,T.BORDER,1)
+    -- ── Main frame ────────────────────────────────────────────────────────
+    local win=Instance.new("Frame")
+    win.Name="Window"; win.Size=UDim2.new(0,WIN_W,0,WIN_H)
+    win.Position=UDim2.new(0.5,-WIN_W/2,0.5,-WIN_H/2)
+    win.BackgroundColor3=T.BG; win.BorderSizePixel=0; win.ClipsDescendants=true
+    win.Parent=sg; rnd(win,6); brd(win,T.BORDER,1)
 
-    -- Title bar
-    local titleBar = Instance.new("Frame")
-    titleBar.Size = UDim2.new(1,0,0,30); titleBar.BackgroundColor3 = T.TAB_BG
-    titleBar.BorderSizePixel = 0; titleBar.Parent = win; rnd(titleBar,6)
+    -- ── Title bar ─────────────────────────────────────────────────────────
+    local titleBar=Instance.new("Frame")
+    titleBar.Size=UDim2.new(1,0,0,HEADER_H)
+    titleBar.BackgroundColor3=T.TAB_BG; titleBar.BorderSizePixel=0; titleBar.Parent=win
 
-    local accent = Instance.new("Frame")
-    accent.Size = UDim2.new(0,3,0.65,0); accent.Position = UDim2.new(0,7,0.175,0)
-    accent.BackgroundColor3 = T.ACCENT; accent.BorderSizePixel = 0
-    accent.Parent = titleBar; rnd(accent,2)
+    -- left accent stripe
+    local accent=Instance.new("Frame")
+    accent.Size=UDim2.new(0,3,0.55,0); accent.Position=UDim2.new(0,8,0.225,0)
+    accent.BackgroundColor3=T.ACCENT; accent.BorderSizePixel=0; accent.Parent=titleBar; rnd(accent,2)
 
-    local titleLbl = lbl(titleBar, title, 12, T.TEXT, FONT_SEMI)
-    titleLbl.Size = UDim2.new(1,-55,1,0); titleLbl.Position = UDim2.new(0,16,0,0)
+    -- title text
+    local titleLbl=lbl(titleBar,title,12,T.TEXT,FONT_SEMI)
+    titleLbl.Size=UDim2.new(1,-140,1,0); titleLbl.Position=UDim2.new(0,18,0,0)
 
-    -- Close button
-    local closeBtn = Instance.new("TextButton")
-    closeBtn.Size = UDim2.new(0,18,0,18); closeBtn.Position = UDim2.new(1,-24,0.5,-9)
-    closeBtn.BackgroundColor3 = T.RED; closeBtn.BorderSizePixel = 0
-    closeBtn.Text = "✕"; closeBtn.TextColor3 = Color3.new(1,1,1)
-    closeBtn.Font = FONT_BOLD; closeBtn.TextSize = 10
-    closeBtn.Parent = titleBar; rnd(closeBtn,9)
+    -- ── Key badge (click to rebind) ───────────────────────────────────────
+    -- stored on self._keyHolder so setkey() can update it from outside
+    self._keyHolder = {key = defaultKey or Enum.KeyCode.RightShift}
+    local listeningForKey = false
+
+    local keyBadge = Instance.new("TextButton")
+    keyBadge.Size=UDim2.new(0,70,0,20); keyBadge.Position=UDim2.new(1,-98,0.5,-10)
+    keyBadge.BackgroundColor3=T.KEY_BG; keyBadge.BorderSizePixel=0
+    keyBadge.Text=tostring(self._keyHolder.key):gsub("Enum.KeyCode.","")
+    keyBadge.TextColor3=T.ACCENT; keyBadge.Font=FONT; keyBadge.TextSize=11
+    keyBadge.Parent=titleBar; rnd(keyBadge,4); brd(keyBadge,T.ACCENT,1)
+    self._keyBadge = keyBadge  -- stored so setkey can update the label too
+
+    -- tooltip
+    local keyTip=lbl(titleBar,"toggle key",10,T.TEXT_DIM,FONT,Enum.TextXAlignment.Center)
+    keyTip.Size=UDim2.new(0,70,0,12); keyTip.Position=UDim2.new(1,-98,1,2)
+    keyTip.BackgroundTransparency=1
+
+    -- close button
+    local closeBtn=Instance.new("TextButton")
+    closeBtn.Size=UDim2.new(0,20,0,20); closeBtn.Position=UDim2.new(1,-26,0.5,-10)
+    closeBtn.BackgroundColor3=T.RED; closeBtn.BorderSizePixel=0
+    closeBtn.Text="✕"; closeBtn.TextColor3=Color3.new(1,1,1)
+    closeBtn.Font=FONT_BOLD; closeBtn.TextSize=11; closeBtn.Parent=titleBar; rnd(closeBtn,10)
     closeBtn.MouseEnter:Connect(function() tw(closeBtn,{BackgroundColor3=Color3.fromRGB(255,90,90)},0.08) end)
     closeBtn.MouseLeave:Connect(function() tw(closeBtn,{BackgroundColor3=T.RED},0.08) end)
 
-    -- Mobile toggle button (only shown on mobile, bottom-right corner)
+    -- ── Tab bar ───────────────────────────────────────────────────────────
+    local tabBar=Instance.new("Frame")
+    tabBar.Size=UDim2.new(1,0,0,TABBAR_H); tabBar.Position=UDim2.new(0,0,0,HEADER_H)
+    tabBar.BackgroundColor3=T.SURFACE; tabBar.BorderSizePixel=0; tabBar.Parent=win
+    local tl=Instance.new("UIListLayout"); tl.FillDirection=Enum.FillDirection.Horizontal
+    tl.SortOrder=Enum.SortOrder.LayoutOrder; tl.Padding=UDim.new(0,1); tl.Parent=tabBar
+    local tp=Instance.new("UIPadding"); tp.PaddingLeft=UDim.new(0,4); tp.Parent=tabBar
+
+    -- separator
+    local sep=Instance.new("Frame")
+    sep.Size=UDim2.new(1,0,0,SEP_H); sep.Position=UDim2.new(0,0,0,HEADER_H+TABBAR_H)
+    sep.BackgroundColor3=T.BORDER; sep.BorderSizePixel=0; sep.Parent=win
+
+    -- ── Content area ──────────────────────────────────────────────────────
+    local CONTENT_TOP = HEADER_H+TABBAR_H+SEP_H
+    local content=Instance.new("Frame")
+    content.Size=UDim2.new(1,0,1,-CONTENT_TOP)
+    content.Position=UDim2.new(0,0,0,CONTENT_TOP)
+    content.BackgroundTransparency=1; content.Parent=win
+    -- NOTE: no ClipsDescendants on content so dropdowns can overflow
+
+    -- ── Mobile ☰ button ───────────────────────────────────────────────────
     local mobileBtn
     if IS_MOBILE then
-        mobileBtn = Instance.new("TextButton")
-        mobileBtn.Size = UDim2.new(0,44,0,44)
-        mobileBtn.Position = UDim2.new(1,-54,1,-54)
-        mobileBtn.BackgroundColor3 = T.ACCENT
-        mobileBtn.BorderSizePixel = 0
-        mobileBtn.Text = "☰"
-        mobileBtn.TextColor3 = Color3.new(1,1,1)
-        mobileBtn.Font = FONT_BOLD
-        mobileBtn.TextSize = 20
-        mobileBtn.ZIndex = 100
-        mobileBtn.Parent = sg
-        rnd(mobileBtn, 22)
-        brd(mobileBtn, T.ACCENT_DIM, 2)
+        mobileBtn=Instance.new("TextButton")
+        mobileBtn.Size=UDim2.new(0,46,0,46); mobileBtn.Position=UDim2.new(1,-56,1,-56)
+        mobileBtn.BackgroundColor3=T.ACCENT; mobileBtn.BorderSizePixel=0
+        mobileBtn.Text="☰"; mobileBtn.TextColor3=Color3.new(1,1,1)
+        mobileBtn.Font=FONT_BOLD; mobileBtn.TextSize=22; mobileBtn.ZIndex=100
+        mobileBtn.Parent=sg; rnd(mobileBtn,23); brd(mobileBtn,T.ACCENT_DIM,2)
     end
 
     makeDraggable(titleBar, win)
 
-    -- Tab bar
-    local tabBar = Instance.new("Frame")
-    tabBar.Size = UDim2.new(1,0,0,28); tabBar.Position = UDim2.new(0,0,0,30)
-    tabBar.BackgroundColor3 = T.SURFACE; tabBar.BorderSizePixel = 0; tabBar.Parent = win
-    local tl = Instance.new("UIListLayout")
-    tl.FillDirection = Enum.FillDirection.Horizontal
-    tl.SortOrder = Enum.SortOrder.LayoutOrder
-    tl.Padding = UDim.new(0,1); tl.Parent = tabBar
-    local tp = Instance.new("UIPadding"); tp.PaddingLeft = UDim.new(0,4); tp.Parent = tabBar
-
-    local sep = Instance.new("Frame")
-    sep.Size = UDim2.new(1,0,0,1); sep.Position = UDim2.new(0,0,0,58)
-    sep.BackgroundColor3 = T.BORDER; sep.BorderSizePixel = 0; sep.Parent = win
-
-    local content = Instance.new("Frame")
-    content.Size = UDim2.new(1,0,1,-60); content.Position = UDim2.new(0,0,0,60)
-    content.BackgroundTransparency = 1; content.ClipsDescendants = true; content.Parent = win
-
-    self._win     = win
-    self._tabBar  = tabBar
-    self._content = content
-    self._tabs    = {}
-    self._visible = true
-    self._winSize = UDim2.new(0,WIN_W,0,WIN_H)
-    -- KEY is stored in a table so the InputBegan closure always reads the current value
-    self._keyHolder = { key = toggleKey or Enum.KeyCode.RightShift }
+    -- ── Open / Close ──────────────────────────────────────────────────────
+    self._win=win; self._tabBar=tabBar; self._content=content
+    self._tabs={}; self._visible=true
+    self._winSize=UDim2.new(0,WIN_W,0,WIN_H)
 
     local function closeWindow()
         if not self._visible then return end
-        self._visible = false
-        tw(win, {Size=UDim2.new(0,WIN_W,0,0)}, 0.18)
-        task.delay(0.2, function()
-            win.Visible = false
-            win.Size = self._winSize   -- restore so open works
-        end)
-        if mobileBtn then tw(mobileBtn, {BackgroundColor3=T.ACCENT_DIM},0.1) end
+        self._visible=false
+        win.ClipsDescendants=true
+        tw(win,{Size=UDim2.new(0,WIN_W,0,0)},0.18)
+        task.delay(0.2,function() win.Visible=false; win.Size=self._winSize end)
+        if mobileBtn then tw(mobileBtn,{BackgroundColor3=T.ACCENT_DIM},0.1) end
     end
 
     local function openWindow()
         if self._visible then return end
-        self._visible = true
-        win.Size = UDim2.new(0,WIN_W,0,0)
-        win.Visible = true
-        tw(win, {Size=self._winSize}, 0.18)
-        if mobileBtn then tw(mobileBtn, {BackgroundColor3=T.ACCENT},0.1) end
+        self._visible=true
+        win.Size=UDim2.new(0,WIN_W,0,0); win.Visible=true
+        win.ClipsDescendants=true
+        tw(win,{Size=self._winSize},0.18)
+        task.delay(0.2,function() win.ClipsDescendants=false end)
+        if mobileBtn then tw(mobileBtn,{BackgroundColor3=T.ACCENT},0.1) end
     end
 
-    onClick(closeBtn, closeWindow)
+    onClick(closeBtn,closeWindow)
+    if mobileBtn then onClick(mobileBtn,function() if self._visible then closeWindow() else openWindow() end end) end
 
-    if mobileBtn then
-        onClick(mobileBtn, function()
-            if self._visible then closeWindow() else openWindow() end
-        end)
-    end
+    -- Key badge click → listen for next keypress to rebind
+    onClick(keyBadge, function()
+        if listeningForKey then return end
+        listeningForKey = true
+        keyBadge.Text = "..."; keyBadge.TextColor3 = T.RED
+    end)
 
-    -- Toggle key — reads from _keyHolder.key so setkey works immediately
+    -- Single InputBegan: handles rebind OR toggle — no duplicate listeners
     UIS.InputBegan:Connect(function(i, gp)
-        if not gp and i.UserInputType == Enum.UserInputType.Keyboard then
-            if i.KeyCode == self._keyHolder.key then
+        if gp then return end
+        if i.UserInputType == Enum.UserInputType.Keyboard then
+            if listeningForKey then
+                -- rebind: update keyHolder AND badge label
+                listeningForKey = false
+                self._keyHolder.key = i.KeyCode
+                keyBadge.Text = tostring(i.KeyCode):gsub("Enum.KeyCode.","")
+                keyBadge.TextColor3 = T.ACCENT
+            elseif i.KeyCode == self._keyHolder.key then
                 if self._visible then closeWindow() else openWindow() end
             end
         end
     end)
 
-    self._closeWindow = closeWindow
-    self._openWindow  = openWindow
+    self._closeWindow=closeWindow
+    self._openWindow=openWindow
 
     return self
-end
-
--- setkey now updates the holder — the InputBegan closure will pick it up instantly
-function Window:setkey(newKey)
-    self._keyHolder.key = newKey
 end
 
 function Window:open()  self._openWindow()  end
 function Window:close() self._closeWindow() end
 
+-- setkey: update the toggle key from code — also updates the badge in the title bar
+function Window:setkey(newKey)
+    self._keyHolder.key = newKey
+    self._keyBadge.Text = tostring(newKey):gsub("Enum.KeyCode.","")
+    self._keyBadge.TextColor3 = T.ACCENT
+end
+
 function Window:createtab(name)
-    local idx = #self._tabs + 1
-    local tab = Tab.new(self._content)
+    local idx=#self._tabs+1
+    local tab=Tab.new(self._content)
 
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0,85,1,0); btn.BackgroundColor3 = T.SURFACE
-    btn.BorderSizePixel = 0; btn.Text = name; btn.TextColor3 = T.TAB_INACTIVE
-    btn.Font = FONT; btn.TextSize = 12; btn.LayoutOrder = idx; btn.Parent = self._tabBar
+    local btn=Instance.new("TextButton")
+    btn.Size=UDim2.new(0,85,1,0); btn.BackgroundColor3=T.SURFACE; btn.BorderSizePixel=0
+    btn.Text=name; btn.TextColor3=T.TAB_INACTIVE; btn.Font=FONT; btn.TextSize=12
+    btn.LayoutOrder=idx; btn.Parent=self._tabBar
 
-    local ind = Instance.new("Frame")
-    ind.Size = UDim2.new(0.6,0,0,2); ind.Position = UDim2.new(0.2,0,1,-2)
-    ind.BackgroundColor3 = T.ACCENT; ind.BorderSizePixel = 0
-    ind.Visible = false; ind.Parent = btn; rnd(ind,1)
+    local ind=Instance.new("Frame")
+    ind.Size=UDim2.new(0.6,0,0,2); ind.Position=UDim2.new(0.2,0,1,-2)
+    ind.BackgroundColor3=T.ACCENT; ind.BorderSizePixel=0; ind.Visible=false; ind.Parent=btn; rnd(ind,1)
 
-    onClick(btn, function() self:_switch(idx) end)
-
-    self._tabs[idx] = { tab=tab, btn=btn, ind=ind }
-    if idx == 1 then self:_switch(1) end
+    onClick(btn,function() self:_switch(idx) end)
+    self._tabs[idx]={tab=tab,btn=btn,ind=ind}
+    if idx==1 then self:_switch(1) end
     return tab
 end
 
 function Window:_switch(idx)
     for i,d in ipairs(self._tabs) do
-        local active = (i == idx)
-        d.tab._frame.Visible = active; d.ind.Visible = active
-        tw(d.btn, {
-            TextColor3       = active and T.TAB_ACTIVE   or T.TAB_INACTIVE,
-            BackgroundColor3 = active and T.SURFACE2 or T.SURFACE,
-        }, 0.1)
+        local a=(i==idx); d.tab._frame.Visible=a; d.ind.Visible=a
+        tw(d.btn,{TextColor3=a and T.TAB_ACTIVE or T.TAB_INACTIVE, BackgroundColor3=a and T.SURFACE2 or T.SURFACE},0.1)
     end
 end
 
 -- ─── Public API ───────────────────────────────────────────────────────────────
-local Digz = {}
-Digz.__index = Digz
-
-function Digz:createwindow(title, toggleKey)
-    return Window.new(title, toggleKey)
-end
-
+local Digz={}; Digz.__index=Digz
+function Digz:createwindow(title, defaultKey) return Window.new(title,defaultKey) end
 return Digz
