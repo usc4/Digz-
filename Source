@@ -1,5 +1,4 @@
 
-
 local Players      = game:GetService("Players")
 local UIS          = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -490,6 +489,12 @@ function Window.new(title, defaultKey)
 
     self._closeWindow=closeWindow
     self._openWindow=openWindow
+
+    -- ensure visible and full size on spawn
+    win.Visible = true
+    win.Size = self._winSize
+    win.ClipsDescendants = false
+    self._visible = true
 
     return self
 end
