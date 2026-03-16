@@ -1,4 +1,5 @@
 
+
 local Players      = game:GetService("Players")
 local UIS          = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
@@ -442,8 +443,13 @@ function Window.new(title, defaultKey)
     self._tabs={}; self._visible=true
     self._winSize=UDim2.new(0,WIN_W,0,WIN_H)
 
+    -- guard: ignore any close calls for the first 0.5s after creation
+    local spawnTime = tick()
+    local SPAWN_GUARD = 0.5
+
     local function closeWindow()
         if not self._visible then return end
+        if (tick() - spawnTime) < SPAWN_GUARD then return end
         self._visible=false
         win.ClipsDescendants=true
         tw(win,{Size=UDim2.new(0,WIN_W,0,0)},0.18)
@@ -461,7 +467,13 @@ function Window.new(title, defaultKey)
         if mobileBtn then tw(mobileBtn,{BackgroundColor3=T.ACCENT},0.1) end
     end
 
-    onClick(closeBtn,closeWindow)
+    -- close button: MouseButton1Click only (TouchTap can misfire on spawn)
+    closeBtn.MouseButton1Click:Connect(closeWindow)
+    closeBtn.TouchTap:Connect(function()
+        if (tick() - spawnTime) < SPAWN_GUARD then return end
+        closeWindow()
+    end)
+
     if mobileBtn then onClick(mobileBtn,function() if self._visible then closeWindow() else openWindow() end end) end
 
     -- Key badge click → listen for next keypress to rebind
@@ -482,6 +494,7 @@ function Window.new(title, defaultKey)
                 keyBadge.Text = tostring(i.KeyCode):gsub("Enum.KeyCode.","")
                 keyBadge.TextColor3 = T.ACCENT
             elseif i.KeyCode == self._keyHolder.key then
+                if (tick() - spawnTime) < SPAWN_GUARD then return end
                 if self._visible then closeWindow() else openWindow() end
             end
         end
