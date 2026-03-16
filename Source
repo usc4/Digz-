@@ -1,27 +1,3 @@
---[[
-    ╔══════════════════════════════════════════╗
-    ║           UILibrary  v1.0                ║
-    ║     Clean Dark Theme — Roblox Studio     ║
-    ╚══════════════════════════════════════════╝
-
-    USAGE EXAMPLE:
-    ──────────────
-    local UILib = require(path.to.UILibrary)
-
-    local win = UILib.CreateWindow("My Game | Settings")
-
-    local tab1 = win:AddTab("Visuals")
-    local tab2 = win:AddTab("Player")
-    local tab3 = win:AddTab("Settings")
-
-    local section1 = tab1:AddSection("Enemy ESP")
-    section1:AddToggle("Nametags", true, function(val) print("Nametags:", val) end)
-    section1:AddToggle("Boxes", false, function(val) print("Boxes:", val) end)
-    section1:AddSlider("Brightness", 0, 100, 50, function(val) print("Brightness:", val) end)
-    section1:AddDropdown("Team Color", {"Red","Blue","Green"}, "Red", function(val) print("Selected:", val) end)
-    section1:AddButton("Reset Settings", function() print("Reset!") end)
-    section1:AddKeybind("Toggle Menu", Enum.KeyCode.RightShift, function(key) print("Bound:", key) end)
-]]
 
 local UILibrary = {}
 UILibrary.__index = UILibrary
