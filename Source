@@ -360,7 +360,7 @@ function Window.new(title, defaultKey)
     local win=Instance.new("Frame")
     win.Name="Window"; win.Size=UDim2.new(0,WIN_W,0,WIN_H)
     win.Position=UDim2.new(0.5,-WIN_W/2,0.5,-WIN_H/2)
-    win.BackgroundColor3=T.BG; win.BorderSizePixel=0; win.ClipsDescendants=true
+    win.BackgroundColor3=T.BG; win.BorderSizePixel=0; win.ClipsDescendants=false
     win.Parent=sg; rnd(win,6); brd(win,T.BORDER,1)
 
     -- ── Title bar ─────────────────────────────────────────────────────────
